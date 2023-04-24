@@ -1,0 +1,4 @@
+build/
+dist/
+pybind11_beispiel.egg-info/
+python_test/
