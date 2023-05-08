@@ -1,15 +1,48 @@
 #include <pybind11/pybind11.h>
 #include "math.hpp"
+#include <iostream>
+#include <pybind11/functional.h>
+#include <pybind11/stl.h>
 
 #define STRINGIFY(x) #x
 #define MACRO_STRINGIFY(x) STRINGIFY(x)
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(pybind11_beispiel, m) {
-    m.def("add", &add, "A function which adds two numbers");
+class DataUpdater {
+public:
+    using CallbackFunction = std::function<void(const std::vector<double>&)>;
 
-    m.def("subtract", [](int i, int j) { return i - j; }, "Lambda Expression to subtract numbers");
+    void set_callback(const CallbackFunction& callback) {
+        callback_ = callback;
+    }
+
+    void update_data(const std::vector<double>& data) {
+        std::cout << "Aktualisiere Daten in C++..." << std::endl;
+        data_ = data;
+        if (callback_) {
+            callback_(data_);
+        }
+    }
+
+private:
+    CallbackFunction callback_;
+    std::vector<double> data_;
+};
+
+PYBIND11_MODULE(pybind11_beispiel, m) {
+    py::class_<DataUpdater>(m, "DataUpdater")
+        .def(py::init<>())
+        .def("set_callback", &DataUpdater::set_callback, "Setzt die Callback-Funktion")
+        .def("update_data", &DataUpdater::update_data, "Aktualisiert die Daten");
+
+    m.def("python_callback", [](const std::vector<double>& data) {
+        std::cout << "Python-Funktion aufgerufen mit folgenden Daten:";
+        for (const auto& value : data) {
+            std::cout << " " << value;
+        }
+        std::cout << std::endl;
+    }, "Python-Funktion, die von C++ aufgerufen wird");
 
     py::class_<Point>(m, "Point")
         .def(py::init<const double, const double>())
