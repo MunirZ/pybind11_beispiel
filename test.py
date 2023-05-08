@@ -17,5 +17,6 @@ updater = bsp.DataUpdater()
 updater.set_callback(callback)
 
 # Aktualisiere die Daten in C++
-data = [1.0, 2.0, 3.0]
-updater.update_data(data)
+#data = [1.0, 2.0, 3.0]
+#updater.update_data(data)
+bsp.generate_data()

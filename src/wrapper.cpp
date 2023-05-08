@@ -1,8 +1,11 @@
 #include <pybind11/pybind11.h>
-#include "math.hpp"
-#include <iostream>
 #include <pybind11/functional.h>
 #include <pybind11/stl.h>
+#include <iostream>
+#include <vector>
+#include <thread>
+
+#include "math.hpp"
 
 #define STRINGIFY(x) #x
 #define MACRO_STRINGIFY(x) STRINGIFY(x)
@@ -30,6 +33,32 @@ private:
     std::vector<double> data_;
 };
 
+void generate_data() 
+{
+    DataUpdater updater;
+
+    // Registriere den Callback
+    updater.set_callback([](const std::vector<double>& data) {
+        std::cout << "Received data from Python: ";
+        for (auto d : data) {
+            std::cout << d << " ";
+        }
+        std::cout << std::endl;
+    });
+
+    // Generiere und aktualisiere die Daten
+    double var1, var2, var3;
+    int counter = 0;
+    for (size_t i; i < 10; i++) {
+        var1 += 1.8;
+        var2 += 2.4;
+        var3 += 3.2;
+        std::vector<double> data{ var1, var2, var3 };
+        updater.update_data(data);
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    }
+}
+
 PYBIND11_MODULE(pybind11_beispiel, m) {
     py::class_<DataUpdater>(m, "DataUpdater")
         .def(py::init<>())
@@ -43,6 +72,8 @@ PYBIND11_MODULE(pybind11_beispiel, m) {
         }
         std::cout << std::endl;
     }, "Python-Funktion, die von C++ aufgerufen wird");
+
+    m.def("generate_data", &generate_data, "Python-Funktion, die von C++ aufgerufen wird");
 
     py::class_<Point>(m, "Point")
         .def(py::init<const double, const double>())
